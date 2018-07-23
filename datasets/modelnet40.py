@@ -2,11 +2,27 @@ import os
 
 from torch.utils.data import Dataset
 import numpy as np
+import h5py
 
 from . import provider
 
 ROOT_DIR = os.path.join(os.path.dirname(__file__), '../')
 ROOT_DIR = os.path.abspath(ROOT_DIR)
+
+
+def _load_data(filelist_txt):
+
+    files = [line.rstrip() for line in open(filelist_txt)]
+    files = [os.path.join(ROOT_DIR, 'datasets', a) for a in files]
+
+    data_list = []
+    label_list = []
+    for f in files:
+        h5_data = h5py.File(f)
+        data_list.append(h5_data['data'][:])
+        label_list.append(h5_data['label'][:])
+
+    return np.vstack(data_list), np.vstack(label_list).squeeze()
 
 
 class ModelNet40(Dataset):
@@ -16,10 +32,10 @@ class ModelNet40(Dataset):
         self.mode = mode
 
         if mode == 'train':
-            self.pts_set, self.labels_set = provider.load_merged_data(
+            self.pts_set, self.labels_set = _load_data(
                 os.path.join(ROOT_DIR, 'datasets/data/modelnet40_ply_hdf5_2048/train_files.txt'))
         elif mode == 'test':
-            self.pts_set, self.labels_set = provider.load_merged_data(
+            self.pts_set, self.labels_set = _load_data(
                 os.path.join(ROOT_DIR, 'datasets/data/modelnet40_ply_hdf5_2048/test_files.txt'))
 
         self.pts_set = self.pts_set[:, :n_points, :]

@@ -33,15 +33,18 @@ class Transformer(nn.Module):
 
     def forward(self, x):
         # BxCxN
+
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
 
         # Bx1024xN
+
         x = self.mp1(x)
         x = torch.squeeze(x, dim=2)
 
         # Bx1024
+
         x = F.relu(self.bn4(self.fc1(x)))
         x = F.relu(self.bn5(self.fc2(x)))
         x = F.linear(x, self.fc3_weight, self.fc3_bias)

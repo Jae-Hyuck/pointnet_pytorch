@@ -7,22 +7,22 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 sys.path.append('..')  # NOQA
-from datasets.modelnet40 import ModelNet40
-from nets.pointnet_cls import PointNetCls
+from datasets.indoor3d import Indoor3D
+from nets.pointnet_seg import PointNetSeg
 
 
-class SolverCls():
+class SolverSeg():
     def __init__(self):
         # device cfg
         self.device = torch.device('cuda')
 
         # Hyper-parameters
-        batch_size = 32
+        batch_size = 24
         learning_rate = 1e-3
 
         # Prepare dataset
-        train_dataset = ModelNet40(mode='train', n_points=1024)
-        test_dataset = ModelNet40(mode='test', n_points=1024)
+        train_dataset = Indoor3D(mode='train')
+        test_dataset = Indoor3D(mode='test')
         self.train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size,
                                        shuffle=True, num_workers=8)
         self.test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size,
@@ -32,15 +32,15 @@ class SolverCls():
         logging.info(f'# of test shapes:: {len(test_dataset)}')
 
         # Network
-        self.net = PointNetCls().to(self.device)
+        self.net = PointNetSeg().to(self.device)
 
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=learning_rate)
-        self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=20, gamma=0.7)
+        self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=15, gamma=0.5)
 
         self.identity = torch.eye(64).to(self.device)
 
     def fit(self):
-        num_epochs = 250
+        num_epochs = 50
 
         # Start training
         for epoch in range(num_epochs):
@@ -55,7 +55,7 @@ class SolverCls():
                 pts = torch.tensor(x['pts'], dtype=torch.float, device=self.device)
                 labels = torch.tensor(x['labels'], dtype=torch.long, device=self.device)
 
-                # Forward pass
+                # Forward pass (pred: Bx13x4096, T2: Bx4096)
                 pred, T2 = self.net(pts)
 
                 # Compute loss
@@ -115,9 +115,9 @@ class SolverCls():
 
     def save_net(self, save_dir):
         os.makedirs(save_dir, exist_ok=True)
-        filename = 'cls.ckpt'
+        filename = 'seg.ckpt'
         torch.save(self.net.state_dict(), os.path.join(save_dir, filename))
 
     def load_net(self, load_dir):
-        filename = 'cls.ckpt'
+        filename = 'seg.ckpt'
         self.net.load_state_dict(torch.load(os.path.join(load_dir, filename)))

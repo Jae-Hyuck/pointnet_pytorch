@@ -4,6 +4,8 @@ import logging
 from datetime import datetime
 
 from solvers.solver_cls import SolverCls
+from solvers.solver_seg import SolverSeg
+# from solvers.solver_part import SolverPart
 
 
 ROOT_DIR = os.path.join(os.path.dirname(__file__))
@@ -19,7 +21,31 @@ def cls_train():
 def cls_test():
     solver = SolverCls()
     solver.load_net('output')
-    solver.eval()
+    solver.evaluate()
+
+
+def seg_train():
+    solver = SolverSeg()
+    solver.fit()
+    solver.save_net('output')
+
+
+def seg_test():
+    solver = SolverSeg()
+    solver.load_net('output')
+    solver.evaluate()
+
+
+def part_train():
+    solver = SolverPart()
+    solver.fit()
+    solver.save_net('output')
+
+
+def part_test():
+    solver = SolverPart()
+    solver.load_net('output')
+    solver.evaluate()
 
 
 if __name__ == '__main__':
@@ -29,7 +55,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # positional arguments
-    parser.add_argument('mode', type=str, choices=['cls_train', 'cls_test'])
+    parser.add_argument('mode', type=str, choices=['cls_train', 'cls_test', 'seg_train',
+                                                   'seg_test', 'part_train', 'part_test'])
 
     args = parser.parse_args()
     CFG = vars(args)
@@ -51,7 +78,5 @@ if __name__ == '__main__':
     # -------
     # Run
     # -------
-    if CFG['mode'] == 'cls_train':
-        cls_train()
-    elif CFG['mode'] == 'cls_test':
-        cls_test()
+    func = globals()[CFG['mode']]
+    func()

@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import h5py
 
@@ -78,10 +77,6 @@ def load_h5(h5_filename):
     return (data, label)
 
 
-def loadDataFile(filename):
-    return load_h5(filename)
-
-
 def load_h5_data_label_seg(h5_filename):
     f = h5py.File(h5_filename)
     data = f['data'][:]
@@ -92,17 +87,3 @@ def load_h5_data_label_seg(h5_filename):
 
 def loadDataFile_with_seg(filename):
     return load_h5_data_label_seg(filename)
-
-
-def load_merged_data(list_filename):
-    files = getDataFiles(list_filename)
-    files = [os.path.join(os.path.dirname(list_filename), os.path.basename(a)) for a in files]
-
-    data_list = []
-    label_list = []
-    for f in files:
-        data, label = loadDataFile(f)
-        data_list.append(data)
-        label_list.append(label)
-
-    return np.vstack(data_list), np.vstack(label_list).squeeze()

@@ -34,9 +34,11 @@ class PointNetCls(nn.Module):
 
     def forward(self, x):
         # Bx3xN
+
         x, _, T2 = self.base_net(x)
 
         # Bx1024
+
         x = self.classifier(x)
 
         # Bx40
